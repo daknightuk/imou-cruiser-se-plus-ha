@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 import os
 from typing import TYPE_CHECKING, Any
@@ -65,9 +66,8 @@ class ImouPtzClient:
 
     async def _connect(self) -> tuple[Any, Any, Any]:
         try:
-            camera = await self.hass.async_add_executor_job(
-                self._create_camera
-            )
+            # _connect is only called inside a dedicated worker event loop.
+            camera = self._create_camera()
             await camera.update_xaddrs()
             media = await camera.create_media_service()
             ptz = await camera.create_ptz_service()
@@ -90,7 +90,7 @@ class ImouPtzClient:
             raise ImouNoPtzProfileError("No PTZ-capable ONVIF profile was found")
         return camera, ptz, profile
 
-    async def get_presets(self) -> list[ImouPreset]:
+    async def _async_get_presets(self) -> list[ImouPreset]:
         """Return every preset supplied by the selected PTZ profile."""
         camera, ptz, profile = await self._connect()
         try:
@@ -109,7 +109,15 @@ class ImouPtzClient:
             presets.append(ImouPreset(name=name or f"Preset {index}", token=token))
         return presets
 
-    async def goto_preset(self, token: str) -> None:
+    def _get_presets_worker(self) -> list[ImouPreset]:
+        """Run the complete ONVIF transaction on a worker event loop."""
+        return asyncio.run(self._async_get_presets())
+
+    async def get_presets(self) -> list[ImouPreset]:
+        """Return presets without blocking Home Assistant's event loop."""
+        return await self.hass.async_add_executor_job(self._get_presets_worker)
+
+    async def _async_goto_preset(self, token: str) -> None:
         """Move the camera to an ONVIF preset token."""
         camera, ptz, profile = await self._connect()
         try:
@@ -121,6 +129,14 @@ class ImouPtzClient:
             raise ImouConnectionError(str(err)) from err
         finally:
             await camera.close()
+
+    def _goto_preset_worker(self, token: str) -> None:
+        """Run the complete move transaction on a worker event loop."""
+        asyncio.run(self._async_goto_preset(token))
+
+    async def goto_preset(self, token: str) -> None:
+        """Move to a preset without blocking Home Assistant's event loop."""
+        await self.hass.async_add_executor_job(self._goto_preset_worker, token)
 
     def _cgi(self, path: str) -> str:
         """Call the Dahua-compatible local CGI endpoint used by Imou firmware."""
