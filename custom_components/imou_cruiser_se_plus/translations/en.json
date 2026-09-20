@@ -1,0 +1,24 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to your Imou Cruiser SE Plus",
+        "description": "Enter the camera's local ONVIF details. Presets will be imported as buttons.",
+        "data": {
+          "host": "Camera IP address",
+          "onvif_port": "ONVIF port",
+          "username": "Username",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect or authenticate. Check the IP address, port, username, password and that ONVIF is enabled.",
+      "no_ptz_profile": "The camera connected, but did not expose a PTZ-capable ONVIF profile.",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This camera is already configured."
+    }
+  }
+}
