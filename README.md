@@ -2,8 +2,8 @@
 
 A local-only Home Assistant custom integration for Imou Cruiser SE Plus cameras.
 It connects directly to the camera over ONVIF and automatically imports every
-camera preset as a Home Assistant button. No Windows bridge, MQTT broker or
-cloud account is required.
+camera preset as a Home Assistant button. No MQTT broker or cloud account is
+required.
 
 ## Why this integration exists
 
@@ -11,10 +11,6 @@ The Imou Cruiser SE Plus exposes its saved PTZ presets through ONVIF, but Home
 Assistant's standard ONVIF integration does not import those named presets as
 individual button entities. This makes the presets awkward to use in dashboards
 and automations even though the camera itself supports them.
-
-An earlier Windows Python bridge proved the presets could be read and recalled,
-but it was a workaround for that ONVIF integration limitation rather than the
-root problem.
 
 This dedicated integration reads the missing preset information through ONVIF
 and creates native Home Assistant entities. It stores credentials in the Home
