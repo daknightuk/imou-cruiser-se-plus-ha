@@ -15,6 +15,7 @@ type ImouConfigEntry = ConfigEntry[ImouPtzClient]
 async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool:
     """Set up the integration from a config entry."""
     entry.runtime_data = ImouPtzClient(
+        hass,
         entry.data[CONF_HOST],
         entry.data.get(CONF_ONVIF_PORT, DEFAULT_ONVIF_PORT),
         entry.data[CONF_USERNAME],
