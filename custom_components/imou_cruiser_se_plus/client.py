@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+import os
+from typing import TYPE_CHECKING, Any
 
+import onvif
 from onvif import ONVIFCamera
 import requests
 from requests.auth import HTTPDigestAuth
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 
 class ImouConnectionError(Exception):
@@ -29,16 +34,39 @@ class ImouPreset:
 class ImouPtzClient:
     """Talk to an Imou camera using its local ONVIF endpoint."""
 
-    def __init__(self, host: str, port: int, username: str, password: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        host: str,
+        port: int,
+        username: str,
+        password: str,
+    ) -> None:
+        self.hass = hass
         self.host = host
         self.port = port
         self.username = username
         self.password = password
 
+    def _create_camera(self) -> ONVIFCamera:
+        """Construct the client outside the event loop.
+
+        ONVIFCamera loads local WSDL files and performs initial synchronous
+        service discovery during construction.
+        """
+        return ONVIFCamera(
+            self.host,
+            self.port,
+            self.username,
+            self.password,
+            f"{os.path.dirname(onvif.__file__)}/wsdl/",
+            no_cache=True,
+        )
+
     async def _connect(self) -> tuple[Any, Any, Any]:
         try:
-            camera = ONVIFCamera(
-                self.host, self.port, self.username, self.password
+            camera = await self.hass.async_add_executor_job(
+                self._create_camera
             )
             await camera.update_xaddrs()
             media = await camera.create_media_service()
