@@ -36,7 +36,7 @@ class ImouCruiserConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
             )
             try:
-                presets = await self.hass.async_add_executor_job(client.get_presets)
+                presets = await client.get_presets()
             except ImouNoPtzProfileError:
                 errors["base"] = "no_ptz_profile"
             except ImouConnectionError:
@@ -68,4 +68,3 @@ class ImouCruiserConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
-
