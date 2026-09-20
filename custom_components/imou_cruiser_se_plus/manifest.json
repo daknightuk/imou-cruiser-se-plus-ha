@@ -1,0 +1,12 @@
+{
+  "domain": "imou_cruiser_se_plus",
+  "name": "Imou Cruiser SE Plus PTZ",
+  "codeowners": ["@daknightuk"],
+  "config_flow": true,
+  "documentation": "https://github.com/daknightuk/imou-cruiser-se-plus-ha",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/daknightuk/imou-cruiser-se-plus-ha/issues",
+  "requirements": ["onvif-zeep==0.2.12"],
+  "version": "1.0.0"
+}
