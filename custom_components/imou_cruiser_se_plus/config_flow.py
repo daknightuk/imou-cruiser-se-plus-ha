@@ -30,6 +30,7 @@ class ImouCruiserConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             client = ImouPtzClient(
+                self.hass,
                 host,
                 user_input[CONF_ONVIF_PORT],
                 user_input[CONF_USERNAME],
