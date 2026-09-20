@@ -7,15 +7,9 @@ Home Assistant's standard ONVIF integration does not import these named presets
 as individual button entities. The camera therefore supports the feature, but
 the presets are not readily available to dashboards or automations.
 
-The first workaround was a Windows Python bridge. It queried the presets over
-ONVIF, published HTTP endpoints such as `/preset/1`, and relied on Home
-Assistant YAML `rest_command` entries. That bridge demonstrated the missing
-ONVIF functionality, but it did not solve the integration gap cleanly.
-
 This custom integration addresses that ONVIF limitation directly by discovering
 the camera's presets and representing them as native Home Assistant entities.
-It also removes the workaround's Windows host, background EXE, extra TCP port,
-plaintext JSON configuration and manual command-per-preset setup.
+It requires no manual command-per-preset configuration.
 
 ## Connection model
 
