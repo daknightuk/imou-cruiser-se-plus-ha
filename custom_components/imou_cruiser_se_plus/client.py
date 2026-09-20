@@ -1,4 +1,4 @@
-"""Small synchronous ONVIF client used from Home Assistant's executor."""
+"""Local ONVIF and deterrence client for Imou cameras."""
 
 from __future__ import annotations
 
@@ -35,15 +35,18 @@ class ImouPtzClient:
         self.username = username
         self.password = password
 
-    def _connect(self) -> tuple[Any, Any]:
+    async def _connect(self) -> tuple[Any, Any, Any]:
         try:
             camera = ONVIFCamera(
-                self.host, self.port, self.username, self.password, no_cache=True
+                self.host, self.port, self.username, self.password
             )
-            media = camera.create_media_service()
-            ptz = camera.create_ptz_service()
-            profiles = media.GetProfiles()
+            await camera.update_xaddrs()
+            media = await camera.create_media_service()
+            ptz = await camera.create_ptz_service()
+            profiles = await media.GetProfiles()
         except Exception as err:
+            if "camera" in locals():
+                await camera.close()
             raise ImouConnectionError(str(err)) from err
 
         profile = next(
@@ -55,16 +58,19 @@ class ImouPtzClient:
             None,
         )
         if profile is None:
+            await camera.close()
             raise ImouNoPtzProfileError("No PTZ-capable ONVIF profile was found")
-        return ptz, profile
+        return camera, ptz, profile
 
-    def get_presets(self) -> list[ImouPreset]:
+    async def get_presets(self) -> list[ImouPreset]:
         """Return every preset supplied by the selected PTZ profile."""
-        ptz, profile = self._connect()
+        camera, ptz, profile = await self._connect()
         try:
-            result = ptz.GetPresets({"ProfileToken": profile.token}) or []
+            result = await ptz.GetPresets({"ProfileToken": profile.token}) or []
         except Exception as err:
             raise ImouConnectionError(str(err)) from err
+        finally:
+            await camera.close()
 
         presets: list[ImouPreset] = []
         for index, item in enumerate(result, start=1):
@@ -75,16 +81,18 @@ class ImouPtzClient:
             presets.append(ImouPreset(name=name or f"Preset {index}", token=token))
         return presets
 
-    def goto_preset(self, token: str) -> None:
+    async def goto_preset(self, token: str) -> None:
         """Move the camera to an ONVIF preset token."""
-        ptz, profile = self._connect()
+        camera, ptz, profile = await self._connect()
         try:
             request = ptz.create_type("GotoPreset")
             request.ProfileToken = profile.token
             request.PresetToken = token
-            ptz.GotoPreset(request)
+            await ptz.GotoPreset(request)
         except Exception as err:
             raise ImouConnectionError(str(err)) from err
+        finally:
+            await camera.close()
 
     def _cgi(self, path: str) -> str:
         """Call the Dahua-compatible local CGI endpoint used by Imou firmware."""
