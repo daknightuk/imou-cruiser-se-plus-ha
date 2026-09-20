@@ -21,7 +21,7 @@ async def async_setup_entry(
 ) -> None:
     """Discover presets and create one button per preset."""
     client = entry.runtime_data
-    presets = await hass.async_add_executor_job(client.get_presets)
+    presets = await client.get_presets()
     entities: list[ButtonEntity] = [
         ImouPresetButton(entry, client, preset) for preset in presets
     ]
@@ -66,9 +66,7 @@ class ImouPresetButton(ButtonEntity):
     async def async_press(self) -> None:
         """Move to this preset."""
         try:
-            await self.hass.async_add_executor_job(
-                self._client.goto_preset, self._preset.token
-            )
+            await self._client.goto_preset(self._preset.token)
         except ImouConnectionError as err:
             raise HomeAssistantError(
                 f"Unable to move to preset {self._preset.name}: {err}"
@@ -108,4 +106,3 @@ class ImouSirenButton(ButtonEntity):
             )
         except ImouConnectionError as err:
             raise HomeAssistantError(f"Unable to control the siren: {err}") from err
-
