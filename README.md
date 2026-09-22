@@ -1,5 +1,16 @@
 # Imou Cruiser SE Plus PTZ for Home Assistant
 
+## Windows desktop MQTT bridge
+
+The [ImouBridge Windows app](imoubridge/README.md) is also available in this
+repository, with its [standalone executable](imoubridge/ImouBridge.exe),
+[Python source](imoubridge/app5.py), dependencies and a PowerShell build script.
+It provides preset and spotlight control through MQTT, a desktop interface,
+connection tests and automatic connection when cameras are configured.
+The Windows app does not include siren control.
+
+## Native Home Assistant integration
+
 A local-only Home Assistant custom integration for Imou Cruiser SE Plus cameras.
 It connects directly to the camera over ONVIF and automatically imports every
 camera preset as a Home Assistant button. No MQTT broker or cloud account is
